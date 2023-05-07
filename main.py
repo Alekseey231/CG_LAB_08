@@ -38,8 +38,6 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pen = QPen()
         self.color = QColor(Qt.green)
 
-        self.l_choosen_color.setStyleSheet("background-color: green")
-        self.l_choosen_color.clicked.connect(self.set_color)
 
         self.setup_toolbar()
 
@@ -77,7 +75,6 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.b_clear.clicked.connect(self.clear_scene)
         self.b_del_sides.clicked.connect(self.clear_sides)
         self.b_del_cutter.clicked.connect(self.clear_cutter)
-        self.b_choose_color.clicked.connect(self.set_color)
         self.b_add_point.clicked.connect(self.get_point)
         self.b_add_point_2.clicked.connect(self.set_seed_pixel)
 
@@ -208,9 +205,10 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
             create_error_window("Error!", "Отсекатель должен быть выпуклым многоугольником!")
             return
         self.image.fill(Qt.white)
+        for i in range(1, len(self.all_polygon[0])):
+            self.draw_line(self.all_polygon[0][i - 1], self.all_polygon[0][i], self.blue)
         for i in range(len(res)):
             if res[i] != NOT_VISIBLE:
-                #print(self.all_line[i], res[i])
                 if self.all_line[i][0] == res[i][0] and self.all_line[i][1] == res[i][1]:
                     self.draw_line(res[i][0], res[i][1], self.green)
                 else:
@@ -220,8 +218,7 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.draw_line(res[i][1], self.all_line[i][1], self.black)
             else:
                 self.draw_line(self.all_line[i][0], self.all_line[i][1], self.black)
-        for i in range(1, len(self.all_polygon[0])):
-            self.draw_line(self.all_polygon[0][i-1], self.all_polygon[0][i], self.blue)
+
         self.scene.clear()
         self.scene.addPixmap(QPixmap.fromImage(self.image))
 
@@ -240,7 +237,7 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
                     point = QPoint(point.x(), self.current_polygon[-1].y())
             self.add_point(point)
         except Exception as e:
-            #print(point)
+            # print(point)
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
@@ -254,10 +251,37 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
                 except Exception as e:
                     print(e)
             else:
+                row_num = []
+                ranges = self.tableWidget.printSelection()
+                if len(ranges) > 0 and len(ranges) != 2:
+                    create_error_window("Error!", "Должно быть выделены ровно 2 ячейки!")
+                    self.current_line.pop()
+                    return
+                elif len(ranges) == 2:
+                    for i in ranges:
+                        row_num.append(i.topRow())
+                    first_point = QPoint(int(self.tableWidget.item(row_num[0], 0).text()),
+                                         int(self.tableWidget.item(row_num[0], 1).text()))
+                    second_point = QPoint(int(self.tableWidget.item(row_num[1], 0).text()),
+                                          int(self.tableWidget.item(row_num[1], 1).text()))
+
+                    correct_vec = second_point - first_point
+                    vec = self.current_line[-1] - self.current_line[-2]
+
+                    if correct_vec.x() == 0:
+                        vec = QPoint(0, vec.y())
+                    elif correct_vec.y() == 0:
+                        vec = QPoint(vec.x(), 0)
+                    else:
+                        k = correct_vec.x() / vec.x()
+                        vec = QPoint(vec.x(), correct_vec.y() / k)
+
+                    self.current_line = [vec+self.current_line[-2], self.current_line[-2]]
+
                 self.draw_line(self.current_line[-1], self.current_line[-2], self.black)
                 self.all_line.append(self.current_line)
                 self.current_line = []
-                #print(self.all_line)
+                # print(self.all_line)
         except Exception as e:
             print(e)
 
@@ -279,7 +303,7 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def draw_line(self, start_point: QPoint, end_point: QPoint, color):
 
-        #self.my_draw_line(start_point, end_point, color)
+        # self.my_draw_line(start_point, end_point, color)
         self.p.begin(self.image)
         self.p.setTransform(self.transform)
         self.pen.setColor(color)
@@ -302,16 +326,6 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.image.setPixel(round(point[0]) + self.image.width() // 2,
                                 (round(point[1]) * -1 + self.image.width() // 2),
                                 color.rgb())
-
-    def get_time(self):
-        self.comboBox.setCurrentIndex(0)
-        start_time = time.time()
-        self.fill()
-        end_time = time.time()
-        try:
-            create_error_window("Замеры времени: ", "{:.3f}".format(end_time - start_time))
-        except Exception as e:
-            print(e)
 
     def setup_toolbar(self):
         close = QAction('О программе', self)
@@ -339,16 +353,15 @@ class Main_window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def about_program(self):
         create_error_window("О программе",
-                            "Реализован алгоритм заполнения области по ребрам")
+                            "Реализован алгоритм Кируса-Бека")
 
     def info(self):
         create_error_window("Справка",
-                            "1) Ввод точек на графическую сцену осуществляется с помощью левой кнопки мыши или с помощью "
+                            "1) Ввод точек отсекателя на графическую сцену осуществляется с помощью левой кнопки мыши или с помощью "
                             "ввода в соответствующие поля координат в интерфейсе\n "
                             "2) С помощью правой кнопки мыши можно замкнуть область\n"
-                            "3) Для того, чтобы построить вертикальное ребро - после ввода точки нужно удерживать "
-                            "shift при вводе следующей точки\n"
-                            "4) Для построения горизонтального ребра нужно удерживать Ctrl при вводе следующей точки\n")
+                            "3) Для того, чтобы построить отрезок можно использовать поле ввода или колесико мыши\n"
+                            "4) Для построения отрезка, параллельного стороне отсекателя, необходимо выделить нужную сторону, после чего как и обычно строить отрезок")
 
 
 if __name__ == "__main__":

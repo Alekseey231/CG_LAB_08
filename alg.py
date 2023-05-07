@@ -9,14 +9,11 @@ NOT_VISIBLE = 1
 
 def otsek_all(all_line_segment: List[List[QPoint]], polygon: List[QPoint]):
     all_line_segment_visible = []
-    # print(all_line_segment)
-    # print(polygon)
     if not is_correct_polygon(polygon):
         return -1
     for line_segment in all_line_segment:
         result = otsek(line_segment, polygon)
         all_line_segment_visible.append(result)
-        # print(1111)
     return all_line_segment_visible
 
 
@@ -49,8 +46,6 @@ def otsek(vector: List[QPoint], polygon: List[QPoint]):
         n: QPoint = QPoint(c_y * side.y(), c_x * side.x())
         w: QPoint = P1 - f
         D_ck: float = scalar(n, D)
-        #print(polygon[i + 1], polygon[i], n)
-        # print("D_CK", D_ck)
         W_ck: float = scalar(n, w)
         if D_ck == 0:
             if W_ck >= 0:
@@ -58,34 +53,28 @@ def otsek(vector: List[QPoint], polygon: List[QPoint]):
             else:
                 return NOT_VISIBLE
         t = -W_ck / D_ck
-        # print(t)
         if D_ck > 0:
-            #print(">0", t)
             if t > 1:
                 return NOT_VISIBLE
             else:
                 t_start = max(t_start, t)
         else:
-            #print("<=0", t)
             if t < 0:
                 return NOT_VISIBLE
             else:
                 t_end = min(t_end, t)
-    #print(t_start, t_end)
     if t_start <= t_end:
-        start = P1 + D * t_start
-        end = P1 + D * t_end
-        #start = QPoint(round(P1.x() + D.x() * t_start), round(P1.y() + D.y() * t_start))
-        #end = QPoint(round(P1.x() + D.x() * t_end), round(P1.y() + D.y() * t_end))
+        start = QPoint(round(P1.x() + D.x() * t_start), round(P1.y() + D.y() * t_start))
+        end = QPoint(round(P1.x() + D.x() * t_end), round(P1.y() + D.y() * t_end))
+        #start = P1 + D * t_start
+        #end = P1 + D * t_end
         return start, end
     else:
         return NOT_VISIBLE
 
 
 def scalar(a: QPoint, b: QPoint) -> float:
-    # print("Scalar ", a, b)
     res = a.x() * b.x() + a.y() * b.y()
-    # print("Res ", res)
     return res
 
 

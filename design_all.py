@@ -3,7 +3,7 @@ from typing import List, Union
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QPointF, QEvent
 from PyQt5.QtGui import QTransform, QImage, QMouseEvent
-from PyQt5.QtWidgets import QGraphicsView, QApplication, QLabel
+from PyQt5.QtWidgets import QGraphicsView, QApplication, QLabel, QTableWidget
 
 
 class ClickableLabel(QLabel):
@@ -81,6 +81,14 @@ class CustomGraphicsView(QGraphicsView):
             super().mousePressEvent(event)
 
 
+class MyTable(QTableWidget):
+    def __init__(self, rows, columns):
+        super().__init__(rows, columns)
+
+    def printSelection(self):
+        ranges = self.selectedRanges()
+        return ranges
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -96,7 +104,7 @@ class Ui_MainWindow(object):
         self.widget.setObjectName("widget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.tableWidget = QtWidgets.QTableWidget(self.widget)
+        self.tableWidget = MyTable(0, 0)
         self.tableWidget.setMinimumSize(QtCore.QSize(230, 0))
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
@@ -136,18 +144,6 @@ class Ui_MainWindow(object):
         self.b_add_point_2.setObjectName("b_add_point_2")
         self.verticalLayout_4.addWidget(self.b_add_point_2)
         self.verticalLayout.addWidget(self.groupBox_3)
-        self.groupBox_2 = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.l_choosen_color = ClickableLabel(self.groupBox_2)
-        self.l_choosen_color.setText("")
-        self.l_choosen_color.setObjectName("l_choosen_color")
-        self.verticalLayout_3.addWidget(self.l_choosen_color)
-        self.b_choose_color = QtWidgets.QPushButton(self.groupBox_2)
-        self.b_choose_color.setObjectName("b_choose_color")
-        self.verticalLayout_3.addWidget(self.b_choose_color)
-        self.verticalLayout.addWidget(self.groupBox_2)
         self.p_fill = QtWidgets.QPushButton(self.widget)
         self.p_fill.setObjectName("p_fill")
         self.verticalLayout.addWidget(self.p_fill)
@@ -184,8 +180,6 @@ class Ui_MainWindow(object):
         self.b_add_point.setText(_translate("MainWindow", "Добавить точку"))
         self.groupBox_3.setTitle(_translate("MainWindow", "Добавление точки отсекателя"))
         self.b_add_point_2.setText(_translate("MainWindow", "Добавить точку"))
-        self.groupBox_2.setTitle(_translate("MainWindow", "Выбор цвета"))
-        self.b_choose_color.setText(_translate("MainWindow", "Выбрать цвет"))
         self.p_fill.setText(_translate("MainWindow", "Отсечь"))
         self.b_clear.setText(_translate("MainWindow", "Очистить сцену"))
         self.b_del_cutter.setText(_translate("MainWindow", "Удалить отсекатель"))
